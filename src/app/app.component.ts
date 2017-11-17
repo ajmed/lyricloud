@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import {MusixmatchService} from "./musixmatch/musixmatch.service";
-declare const System: any;
+import {Observable} from "rxjs/Observable";
+import {Track} from "./musixmatch/track.model";
+import {first, catchError, map, tap} from 'rxjs/operators'
+import {JsonParseBugInterceptor} from "./musixmatch/json-parse-bug-interceptor";
 
 @Component({
   selector: 'app-root',
@@ -25,8 +28,10 @@ export class AppComponent {
   constructor(private musixmatchService: MusixmatchService) {
     musixmatchService.apiKey = '2de27e73d4e65b33be5f4f2b24ddbf4a'
     musixmatchService.version = '1.1'
-    const tracks: any = musixmatchService.queryTrack('Three Days Grace', 5, 1)
-    this.lyrics = tracks.toString()
-    console.log(tracks)
+    const tracks: Observable<Track[]> = musixmatchService.queryTrack('Three Days Grace', 5, 1)
+    //this.lyrics = tracks.toString()
+    tracks.subscribe(fields => {
+      fields.forEach(i => console.log(i))
+    })
   }
 }

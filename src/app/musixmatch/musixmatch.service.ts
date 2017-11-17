@@ -1,11 +1,14 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs/Observable";
-import {Lyrics} from "./lyrics.model";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {Track} from "./track.model";
-import {catchError, map, tap} from "rxjs/operators";
 import {of} from "rxjs/observable/of";
 import {LogService} from "../log/log.service";
+import {catchError, map, tap} from "rxjs/operators";
+
+(window as any).consumeMusixmatchApiCall = function(data) {
+  console.log('inside consume')
+}
 
 @Injectable()
 export class MusixmatchService {
@@ -19,11 +22,13 @@ export class MusixmatchService {
   }
 
   queryTrack(query: string, pageSize: number, page: number): Observable<Track[]> {
-    const url = `${this.baseUrl}/${this.version}/track.search?apikey=${this.apiKey}&page_size=${pageSize}&page=${page}`
+    const method = 'track.search'
+    const baseQueryParams = `format=jsonp&callback=consumeMusixmatchApiCall&apikey=${this.apiKey}`
+    const queryParams = `query=${query}&page_size=${pageSize}&page=${page}`
+    const url = `${this.baseUrl}/${this.version}/${method}?${baseQueryParams}&${queryParams}`
     console.log(url)
     return this.http.get<any>(url).pipe(
-      map(response => response.track_list),
-      tap(it => console.log(it)),
+      map(response => (response as any).track_list),
       catchError(this.handleError('queryTrack', []))
     )
   }
