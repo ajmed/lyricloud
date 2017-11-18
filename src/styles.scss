@@ -1,0 +1,74 @@
+@import '../node_modules/@angular/material/theming';
+
+// **Be sure that you only ever include this mixin once!**
+@include mat-core();
+
+html {
+  min-height: 100%;
+  position: relative;
+}
+
+body {
+  position: absolute;
+  height: 100%;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  z-index: -1;
+  margin: 0;
+}
+
+.mat-sidenav-container {
+  height: 100%;
+}
+
+$lyracloud-light-primary: mat-palette($mat-deep-orange);
+$lyracloud-light-accent:  mat-palette($mat-pink, A200, A100, A400);
+$lyracloud-light-theme:   mat-light-theme($lyracloud-light-primary, $lyracloud-light-accent);
+.lyracloud-light-theme {
+  @include angular-material-theme($lyracloud-light-theme);
+}
+
+$lyracloud-dark-primary: mat-palette($mat-cyan);
+$lyracloud-dark-accent:  mat-palette($mat-amber, A200, A100, A400);
+$lyracloud-dark-warn:    mat-palette($mat-deep-orange);
+$lyracloud-dark-theme:   mat-dark-theme($lyracloud-dark-primary, $lyracloud-dark-accent, $lyracloud-dark-warn);
+.lyracloud-dark-theme {
+  @include angular-material-theme($lyracloud-dark-theme);
+}
+
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Material Icons'),
+  local('MaterialIcons-Regular'),
+  url(https://localhost:4201/MaterialIcons-Regular.woff2) format('woff2'),
+  url(https://localhost:4201/MaterialIcons-Regular.woff) format('woff'),
+  url(https://localhost:4201/MaterialIcons-Regular.ttf) format('truetype');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}

@@ -1,8 +1,10 @@
 export class Track {
-  trackId: number
-  trackName: string
-  albumId: number
-  artistId: number
-  trackLength: number
-  hasLyrics: boolean
+  constructor(public trackId: number,
+              public trackName: string,
+              public albumId: number,
+              public artistId: number,
+              public trackLength: number,
+              public hasLyrics: boolean) {
+
+  }
 }
