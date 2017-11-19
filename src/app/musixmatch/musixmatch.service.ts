@@ -4,8 +4,7 @@ import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {Track} from "./track.model";
 import {of} from "rxjs/observable/of";
 import {LogService} from "../log/log.service";
-import {catchError, map, tap} from "rxjs/operators";
-import {LyracloudEvent} from "../lyracloud-event";
+import {catchError, map} from "rxjs/operators";
 
 /**
  * The Musixmatch service wraps the musixmatch REST api.
@@ -17,18 +16,23 @@ export class MusixmatchService {
 
   private _apiKey: string = ''
     set apiKey(value: string) {
-      this._apiKey = value;
+      this._apiKey = value
       this.baseQueryParams = `format=jsonp&callback=callback&apikey=${this._apiKey}`
     }
     get apikey() { return this._apiKey}
 
-  version: string = '1.1'
-  private baseUrl: string = 'https://api.musixmatch.com/ws'
+  private _version: string = '1.1'
+    set version(value: string) {
+      this._version = value
+      this.baseUrl = `https://api.musixmatch.com/ws/${this._version}`
+    }
+    get version() { return this._version }
+
+  private baseUrl: string = `https://api.musixmatch.com/ws/${this._version}`
   private baseQueryParams = `format=jsonp&callback=callback&apikey=${this._apiKey}`
 
   constructor(private http: HttpClient, private log: LogService) {
   }
-
 
   /**
    * This is the most general MusixmatchService api call. Using this function over other
@@ -42,27 +46,77 @@ export class MusixmatchService {
    * @returns {Observable<any>}
    */
   baseApiCall(method: string, queryParams: string): Observable<any> {
-    const url = `${this.baseUrl}/${this.version}/${method}?${this.baseQueryParams}&${queryParams}`
+    const url = `${this.baseUrl}/${method}?${this.baseQueryParams}&${queryParams}`
     return this.http.get<any>(url).pipe(
       catchError(this.handleError('apiCall', []))
     )
   }
 
-  underscoreToCamelCase = function(underscoreCase: string){
-    return underscoreCase.replace(/(_[a-z])/g, function($1){return $1.toUpperCase().replace('_','');});
-  };
-
-  queryTrack(query: string, pageSize: number, page: number): Observable<Track[]> {
+  queryTracks(query: string, pageSize: number, page: number): Observable<Track[]> {
     const method = 'track.search'
-    const queryParams = `query=${query}&page_size=${pageSize}&page=${page}`
-    const url = `${this.baseUrl}/${this.version}/${method}?${this.baseQueryParams}&${queryParams}`
+    const queryParams = `q=${query}&page_size=${pageSize}&page=${page}`
+    const url = `${this.baseUrl}/${method}?${this.baseQueryParams}&${queryParams}`
     return this.http.get<any>(url).pipe(
-      map(response => {
-        const camelCaseTrackList = this.underscoreToCamelCase(JSON.stringify(response.track_list))
-        return JSON.parse(camelCaseTrackList)
+      map(jsonpResponse => {
+        const tracks: Track[] = []
+        MusixmatchService.parseMusixmatchResponse(jsonpResponse).trackList.forEach(t => tracks.push(t.track))
+        return tracks
       }),
-      catchError(this.handleError('queryTrack', []))
+      catchError(this.handleError('queryTracks', []))
     )
+  }
+
+  findLyricsByTrackId(trackId: number): Observable<string> {
+    const method = 'track.lyrics.get'
+    const queryParams = `track_id=${trackId}`
+    const url = `${this.baseUrl}/${method}?${this.baseQueryParams}&${queryParams}`
+    return this.http.get<any>(url).pipe(
+      map ( jsonpResponse => {
+        const lyrics = MusixmatchService.parseMusixmatchResponse(jsonpResponse).lyrics.lyricsBody
+        console.log(lyrics)
+        return lyrics
+      }),
+      catchError(this.handleError('findLyricsByTrackId', ''))
+    )
+  }
+
+  /**
+   * Remove the jsonp wrapper from the musixmatch response and remove all the backslashes in order to
+   * transform it back into a js object
+   *
+   * @param jsonpResponse
+   * @returns {any}
+   */
+  private static getBodyFromMusixmatchJsonpResponse(jsonpResponse: any): any {
+    // exclude \n in search
+    const response = jsonpResponse
+      .substr(10, jsonpResponse.length-13)
+      .replace(new RegExp('\\\\', 'g'), '')
+    return JSON.parse(response).message.body
+  }
+
+  /**
+   *
+   * @param response
+   * @returns {any}
+   */
+  private static parseMusixmatchResponse(response: any): any {
+    const resp = MusixmatchService.getBodyFromMusixmatchJsonpResponse(response)
+    return JSON.parse(MusixmatchService.underscoreToCamelCase(JSON.stringify(resp)))
+  }
+
+  /**
+   * Take an underscore_case string and return a camelCase string.
+   * Example: i_like_potatoes => iLikePotatoes
+   *
+   * @param {string} underscoreCase
+   * @returns {string}
+   */
+  private static underscoreToCamelCase(underscoreCase: string): string {
+    return underscoreCase.replace(
+      /(_[a-z])/g,
+      function($1){return $1.toUpperCase().replace('_','');}
+    );
   }
 
   /**

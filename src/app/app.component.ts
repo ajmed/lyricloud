@@ -8,24 +8,32 @@ import {FormBuilder} from "@angular/forms";
   selector: 'app-root',
   template: `
     <mat-sidenav-container>
+      <h1 style="text-align:center">Welcome to {{title}}!</h1>
+      
       <div style="text-align:center">
-
-        <h1>Welcome to {{title}}!</h1>
-        
         <mat-form-field class="full-width">
           <input [(ngModel)]="query" color="primary" type="text" class="full-width" matInput placeholder="search song | artist | album"/>
         </mat-form-field>
         <br>
-        <button mat-raised-button (click)="queryTracks()">search</button>
+        <button mat-raised-button (click)="queryTracks()" style="text-align:center">search</button>
+      </div>
 
-        <!-- list of track(s) -->
-        <p>Search results:</p>
-        <ul>
+      <!-- list of track(s) -->
+      <div>
+        <h4>Search results:</h4>
+        <ol>
           <li *ngFor="let result of queryResults" (click)="onSelectTrack(result)">
-            <track-list-item [track]="result"></track-list-item>
+            <span>id: {{result.trackId}} | track name: {{result.trackName}}</span>
           </li>
-        </ul>
-        
+        </ol>
+      </div>
+      
+      <div *ngIf="selectedTrack">
+        <h4>{{ selectedTrack.trackName }} lyrics:</h4>
+        <p>{{ selectedTrack.lyricsBody }}</p>
+      </div>
+      
+      <div style="text-align:center">
         <img width="300" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
       </div>
     </mat-sidenav-container>
@@ -40,8 +48,7 @@ import {FormBuilder} from "@angular/forms";
 })
 export class AppComponent implements OnChanges {
 
-  title = 'Lyrical Clouds';
-  lyrics = ''
+  title = 'Lyracloud';
   query = ''
   queryResults: Track[] = []
   selectedTrack: Track
@@ -54,12 +61,16 @@ export class AppComponent implements OnChanges {
 
   onSelectTrack(track: Track) {
     this.selectedTrack = track
+    this.musixmatchService.findLyricsByTrackId(this.selectedTrack.trackId).subscribe( lyrics => {
+      console.log(lyrics)
+      this.selectedTrack.lyricsBody = lyrics
+    })
   }
 
   queryTracks() {
     this.lastCallToQueryTracks = new Date().getTime()
-    const tracks: Observable<Track[]> = this.musixmatchService.queryTrack(this.query,20, 1)
-    tracks.subscribe(tracks => this.queryResults = tracks)
+    const tracks: Observable<Track[]> = this.musixmatchService.queryTracks(this.query, 20, 1)
+    tracks.subscribe(tracks => { this.queryResults = tracks } )
   }
 
   ngOnChanges(changes: SimpleChanges): void {

@@ -4,7 +4,8 @@ export class Track {
               public albumId: number,
               public artistId: number,
               public trackLength: number,
-              public hasLyrics: boolean) {
+              public hasLyrics: boolean,
+              public lyricsBody: string) {
 
   }
 }
