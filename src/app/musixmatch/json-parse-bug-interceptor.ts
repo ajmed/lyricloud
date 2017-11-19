@@ -15,19 +15,17 @@ import "rxjs/add/operator/catch";
 /**
  * Alright, let's go over this because it's pretty hacky.
  * Currently there's a "bug" in angular where a response from a server is automatically
- * parsed as JSON if the request is json (go figure). However, the content type is actually jsonp
- * for most web apis to avoid a cross domain request. That said, jsonp is not defined as a valid content type,
+ * parsed as JSON if the request's content type header is json (go figure).
+ * However, if the content type is actually jsonp (the case for most web apis as a loophole to handle the
+ * issue of requesting a resource from a different domain).
+ * That said, jsonp is not defined as a valid content type,
  * so when we make the request we still need to request json, not jsonp. When the response comes back
- * as jsonp and NOT json, angular says "WHOA THERE, that's not valid json." Although angular is correct here,
- * we're all like "c'mon man, just let it through." Therefore, we need this HttpInterceptor to handle any responses
- * that are valid (http status of 200-300) and are an error in angular's eyes. If those conditions are met we
+ * as jsonp and NOT json, the JSON parser says "WHOA THERE, that's not valid json."
+ * Although the json parser is correct here, we're all like "c'mon man, just let it through."
+ * Therefore, we need this HttpInterceptor to handle any responses that are
+ * valid (http status of 200-300) and are an
+ * error in the parser's eyes. If those conditions are met we
  * parse out the jsonp function wrapper and pass the response through like nothing happened.
- *
- * NOTE: Ensure any jsonp callback query parameter is named exactly 'callback', otherwise this interceptor will
- * not parse the response correctly. It depends on the length of the callback function string, so technically, any
- * callback with 8 letters will work, but standards work well, so keep it as callback.
- * For example, https://example.com/api/1.1/getresource?format=jsonp&callback=callback, notice the callback parameter
- * is exactly 'callback'.
  */
 @Injectable()
 export class JsonParseBugInterceptor implements HttpInterceptor {
@@ -37,7 +35,7 @@ export class JsonParseBugInterceptor implements HttpInterceptor {
         if (err.status >= 200 && err.status < 300) {
 
           const res = new HttpResponse({
-            body: JSON.stringify(err.error.text),
+            body: err.error.text,
             headers: err.headers,
             status: err.status,
             statusText: err.statusText,

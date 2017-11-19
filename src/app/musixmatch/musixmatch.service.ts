@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs/Observable";
-import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {Track} from "./track.model";
 import {of} from "rxjs/observable/of";
 import {LogService} from "../log/log.service";
 import {catchError, map} from "rxjs/operators";
+import {LcStrUtils} from "../lyracloud-string-utils";
 
 /**
  * The Musixmatch service wraps the musixmatch REST api.
@@ -52,6 +53,16 @@ export class MusixmatchService {
     )
   }
 
+  /*
+   * The recipe for creating a MusixmatchService function
+   * form method string
+   * form queryParams string
+   * form url
+   * http call
+   * map jsonpResponse to problem domain usually through parseMusixmatchJsonpResponse
+   * handle any errors
+   */
+
   queryTracks(query: string, pageSize: number, page: number): Observable<Track[]> {
     const method = 'track.search'
     const queryParams = `q=${query}&page_size=${pageSize}&page=${page}`
@@ -59,7 +70,8 @@ export class MusixmatchService {
     return this.http.get<any>(url).pipe(
       map(jsonpResponse => {
         const tracks: Track[] = []
-        MusixmatchService.parseMusixmatchResponse(jsonpResponse).trackList.forEach(t => tracks.push(t.track))
+        this.parseMusixmatchJsonpResponse(jsonpResponse)
+          .trackList.forEach(t => tracks.push(t.track))
         return tracks
       }),
       catchError(this.handleError('queryTracks', []))
@@ -72,51 +84,23 @@ export class MusixmatchService {
     const url = `${this.baseUrl}/${method}?${this.baseQueryParams}&${queryParams}`
     return this.http.get<any>(url).pipe(
       map ( jsonpResponse => {
-        const lyrics = MusixmatchService.parseMusixmatchResponse(jsonpResponse).lyrics.lyricsBody
-        console.log(lyrics)
-        return lyrics
+        return this.parseMusixmatchJsonpResponse(jsonpResponse)
+          .lyrics
+          .lyricsBody
       }),
       catchError(this.handleError('findLyricsByTrackId', ''))
     )
   }
 
   /**
-   * Remove the jsonp wrapper from the musixmatch response and remove all the backslashes in order to
-   * transform it back into a js object
    *
    * @param jsonpResponse
    * @returns {any}
    */
-  private static getBodyFromMusixmatchJsonpResponse(jsonpResponse: any): any {
-    // exclude \n in search
-    const response = jsonpResponse
-      .substr(10, jsonpResponse.length-13)
-      .replace(new RegExp('\\\\', 'g'), '')
-    return JSON.parse(response).message.body
-  }
-
-  /**
-   *
-   * @param response
-   * @returns {any}
-   */
-  private static parseMusixmatchResponse(response: any): any {
-    const resp = MusixmatchService.getBodyFromMusixmatchJsonpResponse(response)
-    return JSON.parse(MusixmatchService.underscoreToCamelCase(JSON.stringify(resp)))
-  }
-
-  /**
-   * Take an underscore_case string and return a camelCase string.
-   * Example: i_like_potatoes => iLikePotatoes
-   *
-   * @param {string} underscoreCase
-   * @returns {string}
-   */
-  private static underscoreToCamelCase(underscoreCase: string): string {
-    return underscoreCase.replace(
-      /(_[a-z])/g,
-      function($1){return $1.toUpperCase().replace('_','');}
-    );
+  private parseMusixmatchJsonpResponse(jsonpResponse: any): any {
+    const response = jsonpResponse.substr(9, jsonpResponse.length-11)
+    const body: any = JSON.parse(response).message.body
+    return JSON.parse(LcStrUtils.underscoreToCamelCase(JSON.stringify(body)))
   }
 
   /**

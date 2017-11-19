@@ -6,6 +6,5 @@ export class Track {
               public trackLength: number,
               public hasLyrics: boolean,
               public lyricsBody: string) {
-
   }
 }

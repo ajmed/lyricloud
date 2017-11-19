@@ -3,6 +3,7 @@ import {MusixmatchService} from "./musixmatch/musixmatch.service";
 import {Observable} from "rxjs/Observable";
 import {Track} from "./musixmatch/track.model";
 import {FormBuilder} from "@angular/forms";
+import {LcStrUtils} from "./lyracloud-string-utils";
 
 @Component({
   selector: 'app-root',
@@ -10,13 +11,18 @@ import {FormBuilder} from "@angular/forms";
     <mat-sidenav-container>
       <h1 style="text-align:center">Welcome to {{title}}!</h1>
       
-      <div style="text-align:center">
-        <mat-form-field class="full-width">
-          <input [(ngModel)]="query" color="primary" type="text" class="full-width" matInput placeholder="search song | artist | album"/>
-        </mat-form-field>
-        <br>
-        <button mat-raised-button (click)="queryTracks()" style="text-align:center">search</button>
-      </div>
+      <form>
+        <div style="text-align:center">
+          <mat-form-field class="full-width">
+            <input color="primary" type="text" class="form-control full-width" matInput 
+                   [(ngModel)]="query" 
+                   name="query"
+                   placeholder="search song | artist | album"/>
+          </mat-form-field>
+          <br>
+          <button type="submit" mat-raised-button (click)="queryTracks()" style="text-align:center">search</button>
+        </div>
+      </form>
 
       <!-- list of track(s) -->
       <div>
@@ -30,12 +36,9 @@ import {FormBuilder} from "@angular/forms";
       
       <div *ngIf="selectedTrack">
         <h4>{{ selectedTrack.trackName }} lyrics:</h4>
-        <p>{{ selectedTrack.lyricsBody }}</p>
+        <div style="white-space:pre-wrap" [innerHTML]="selectedTrack.lyricsBody"></div>
       </div>
       
-      <div style="text-align:center">
-        <img width="300" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
-      </div>
     </mat-sidenav-container>
   `,
   styles: [`
@@ -62,8 +65,7 @@ export class AppComponent implements OnChanges {
   onSelectTrack(track: Track) {
     this.selectedTrack = track
     this.musixmatchService.findLyricsByTrackId(this.selectedTrack.trackId).subscribe( lyrics => {
-      console.log(lyrics)
-      this.selectedTrack.lyricsBody = lyrics
+      this.selectedTrack.lyricsBody = LcStrUtils.jsonStringToHtml(lyrics)
     })
   }
 
