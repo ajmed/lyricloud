@@ -10,11 +10,12 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {LyracloudStyleModule} from "./style/lyracloud-style.module";
 import {TrackListItemComponent} from './musixmatch/track-list-item.component';
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {D3cloudService} from "./d3cloud.service";
 
 @NgModule({
   declarations: [
+    TrackListItemComponent,
     AppComponent,
-    TrackListItemComponent
   ],
   imports: [
     BrowserModule,
@@ -25,13 +26,10 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
     LyracloudStyleModule
   ],
   providers: [
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: JsonParseBugInterceptor,
-      multi: true
-    },
+    LogService,
+    {provide: HTTP_INTERCEPTORS, useClass: JsonParseBugInterceptor, multi: true},
+    D3cloudService,
     MusixmatchService,
-    LogService
   ],
   bootstrap: [AppComponent]
 })
