@@ -5,7 +5,6 @@ import {MusixmatchService} from "./musixmatch/musixmatch.service";
 import {Observable} from "rxjs/Observable";
 import {Track} from "./musixmatch/track.model";
 import {FormBuilder, FormControl, FormGroup} from "@angular/forms";
-import {LcStrUtils} from "./lyracloud-string-utils";
 import {D3cloudService} from "./d3cloud.service";
 
 @Component({
@@ -40,7 +39,7 @@ import {D3cloudService} from "./d3cloud.service";
         <div style="white-space:pre-wrap" [innerHTML]="selectedTrack.lyricsBody"></div>
       </div>
       
-      <canvas id="wordCloudCanvas"></canvas>
+      <div id="word-cloud-canvas"></div>
       
     </mat-sidenav-container>
   `,
@@ -90,14 +89,23 @@ export class AppComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.canvas = document.getElementById('wordCloudCanvas')
-    this.d3CloudService.start(this.canvas)
+    this.canvas = document.getElementById('word-cloud-canvas')
   }
 
   onSelectTrack(track: Track) {
     this.selectedTrack = track
     this.musixmatchService.findLyricsByTrackId(this.selectedTrack.trackId).subscribe( lyrics => {
-      this.selectedTrack.lyricsBody = LcStrUtils.jsonStringToHtml(lyrics)
+      console.log(lyrics)
+      this.selectedTrack.lyricsBody = lyrics
+      /*this.selectedTrack.lyricsBody = LcStrUtils.jsonStringToHtml(lyrics)*/
+      console.log(this.selectedTrack.lyricsBody)
+      let parsedLyrics = this.selectedTrack.lyricsBody
+        .replace(/\n/g, ' ')
+        .replace(/[^A-Za-z0-9\s\u0041-\u007A]/g,'')
+        .split(' ')
+        .filter(str => !!str)
+      console.log(parsedLyrics)
+      this.d3CloudService.start(this.canvas, parsedLyrics)
     })
   }
 
