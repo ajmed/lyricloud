@@ -1,18 +1,18 @@
-import {AfterViewInit, Component, Inject} from '@angular/core';
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/filter";
-import {MusixmatchService} from "./musixmatch/musixmatch.service";
-import {Observable} from "rxjs/Observable";
-import {Track} from "./musixmatch/track.model";
-import {FormBuilder, FormControl, FormGroup} from "@angular/forms";
-import {D3cloudService} from "./d3cloud.service";
+import {AfterViewInit, Component, Inject} from '@angular/core'
+import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/filter'
+import {MusixmatchService} from './musixmatch/musixmatch.service'
+import {Observable} from 'rxjs/Observable'
+import {Track} from './musixmatch/track.model'
+import {FormBuilder, FormControl, FormGroup} from '@angular/forms'
+import {D3cloudService} from './d3cloud.service'
 
 @Component({
   selector: 'app-root',
   template: `
     <mat-sidenav-container>
       <h1 style="text-align:center">Welcome to {{title}}!</h1>
-      
+
       <form [formGroup]="searchForm" (ngSubmit)="queryTracks()">
         <div style="text-align:center">
           <mat-form-field class="full-width">
@@ -33,14 +33,14 @@ import {D3cloudService} from "./d3cloud.service";
           </li>
         </ol>
       </div>
-      
+
       <div *ngIf="selectedTrack">
         <h4>{{ selectedTrack.trackName }} lyrics:</h4>
         <div style="white-space:pre-wrap" [innerHTML]="selectedTrack.lyricsBody"></div>
       </div>
-      
+
       <div id="word-cloud-canvas"></div>
-      
+
     </mat-sidenav-container>
   `,
   styles: [`
@@ -53,10 +53,10 @@ import {D3cloudService} from "./d3cloud.service";
 })
 export class AppComponent implements AfterViewInit {
 
-  title = 'Lyracloud';
+  title = 'Lyricloud'
   searchForm: FormGroup
   lastQuery = ''
-  query = new FormControl("")
+  query = new FormControl('')
 
   queryResults: Track[] = []
   selectedTrack: Track
@@ -70,12 +70,12 @@ export class AppComponent implements AfterViewInit {
     musixmatchService.apiKey = '2de27e73d4e65b33be5f4f2b24ddbf4a'
     musixmatchService.version = '1.1'
 
-    this.searchForm = this.formBuilder.group({ "query": this.query })
+    this.searchForm = this.formBuilder.group({ 'query': this.query })
 
     // detect value changes on the query
     this.searchForm.valueChanges
       .filter(value => {
-        if (this.lastQuery != value.query) {
+        if (this.lastQuery !== value.query) {
           this.lastQuery = value.query
           const elapsedTime = new Date().getTime() - this.lastApiCall
           if (elapsedTime > 750) {
@@ -99,9 +99,9 @@ export class AppComponent implements AfterViewInit {
       this.selectedTrack.lyricsBody = lyrics
       /*this.selectedTrack.lyricsBody = LcStrUtils.jsonStringToHtml(lyrics)*/
       console.log(this.selectedTrack.lyricsBody)
-      let parsedLyrics = this.selectedTrack.lyricsBody
+      const parsedLyrics = this.selectedTrack.lyricsBody
         .replace(/\n/g, ' ')
-        .replace(/[^A-Za-z0-9\s\u0041-\u007A]/g,'')
+        .replace(/[^A-Za-z0-9\s\u0041-\u007A]/g, '')
         .split(' ')
         .filter(str => !!str)
       console.log(parsedLyrics)
